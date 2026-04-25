@@ -27,9 +27,9 @@ os.environ["TORCH_HOME"] = OFFLINE_MODELS
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ── Settings ──────────────────────────────────────────────────────────────────
-CLASSES    = ["cats", "dogs", "horses", "Humans"]  # must match folder names
-NUM_IMAGES = 10    # total test images (split evenly across 4 classes)
-SEED       = 42
+CLASSES           = ["cats", "dogs", "horses", "Humans"]  # must match folder names
+IMAGES_PER_CLASS  = 2
+SEED              = 42
 
 # ── 1. Device ─────────────────────────────────────────────────────────────────
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -54,22 +54,14 @@ preprocess = transforms.Compose([
                          std=[0.229, 0.224, 0.225]),
 ])
 
-# ── 4. Select 10 test images (balanced) ──────────────────────────────────────
+# ── 4. Select test images ─────────────────────────────────────────────────────
 random.seed(SEED)
 test_images = []   # list of (abs_path, true_class_name)
-per_class   = NUM_IMAGES // len(CLASSES)        # 2 per class
-extras      = NUM_IMAGES  % len(CLASSES)        # 2 extra for first two classes
 
-for i, cls in enumerate(CLASSES):
-    cls_dir = os.path.join(DATA_DIR, cls)
-    files   = sorted([
-        f for f in os.listdir(cls_dir)
-        if f.lower().endswith((".jpg", ".jpeg", ".png"))
-    ])
-    n       = per_class + (1 if i < extras else 0)
-    chosen  = random.sample(files, min(n, len(files)))
-    for f in chosen:
-        test_images.append((os.path.join(cls_dir, f), cls))
+for cls in CLASSES:
+    files = sorted(os.listdir(os.path.join(DATA_DIR, cls)))
+    for f in random.sample(files, IMAGES_PER_CLASS):
+        test_images.append((os.path.join(DATA_DIR, cls, f), cls))
 
 print(f"\nTest set ({len(test_images)} images):")
 for p, c in test_images:
