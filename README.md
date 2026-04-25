@@ -12,6 +12,9 @@ The target classes are:
 - `horses`
 - `Humans`
 
+> `Humans` is intentionally capitalized because the scripts expect that exact
+> folder/class name.
+
 ## Repository contents
 
 ```text
