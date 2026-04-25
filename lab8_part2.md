@@ -9,6 +9,25 @@
 
 ---
 
+## Your Task
+
+`finetune.py` is a **skeleton script**. The dataset loading, DataLoaders, and
+the outer epoch + phase loop are already provided.
+
+**You must complete §2 – §6:**
+
+| Section | What to implement |
+|---------|-------------------|
+| **§2** | Freeze all backbone parameters; replace the FC head with `Linear(2048 → 4)` |
+| **§3** | Define the loss function (`CrossEntropyLoss`) and optimizer (`Adam` on FC only) |
+| **§4** | Inner batch loop — forward pass, loss, backward, optimizer step, accumulate stats |
+| **§5** | Save the trained model weights to `trained_models/resnet50_finetuned.pth` |
+| **§6** | Plot loss & accuracy curves and save to `output/training_curves_part2.png` |
+
+> **Reference solution:** `solution/finetune.py` (do not look until you have tried!)
+
+---
+
 ## 1. Key Concept – What Is Being Trained?
 
 ResNet50 ends with a **fully-connected (FC) layer** that maps 2048 features → 1000 ImageNet classes.
@@ -99,7 +118,9 @@ You can edit these values to experiment.
 
 ## 5. Running Part 2 – Fine-Tuning
 
-With your virtual environment active, from the `try_2026/` directory run:
+**Step 1 – Complete the TODOs in `finetune.py` §2–6** before running.
+
+After completing your implementation, activate the environment and run:
 
 ```bash
 python finetune.py
@@ -107,15 +128,17 @@ python finetune.py
 
 > ⏱️ **Expected runtime:** ~2–5 minutes on CPU | ~30 seconds on GPU.
 
-### What the script does
+### What is provided vs. what you implement
 
-| Step | Action |
-|------|--------|
-| 1 | Loads ResNet50 backbone with frozen weights |
-| 2 | Replaces `model.fc` with `Linear(2048 → 4)` |
-| 3 | Applies data augmentation on the training split |
-| 4 | Trains for 10 epochs; saves the best model by validation accuracy |
-| 5 | Plots loss and accuracy curves |
+| Section | Status | Description |
+|---------|--------|-------------|
+| §1 Dataset & DataLoaders | ✅ provided | ImageFolder, 80/20 split, seeded |
+| Outer epoch + phase loop | ✅ provided | Iterates epochs and train/val phases |
+| **§2 Freeze + replace head** | ✏️ **your task** | Core transfer-learning setup |
+| **§3 Loss & optimizer** | ✏️ **your task** | CrossEntropyLoss + Adam |
+| **§4 Batch loop body** | ✏️ **your task** | Forward, loss, backward, stats |
+| **§5 Save model** | ✏️ **your task** | Persist weights to disk |
+| **§6 Training curves** | ✏️ **your task** | Plot and save loss/accuracy figure |
 
 ### Expected console output (abbreviated)
 

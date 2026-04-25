@@ -3,9 +3,21 @@
 ## Objectives
 
 - Load a pretrained **ResNet50** (trained on ImageNet-1K).
-- Run inference on **10 sample images** from a 4-class dataset (cats / dogs / horses / Humans).
+- Run inference on **8 sample images** from a 4-class dataset (cats / dogs / horses / Humans).
 - Observe the raw **ImageNet top-5 predictions** for each image.
 - Manually record results and build a confusion matrix.
+
+---
+
+## Your Task
+
+`inference.py` is a **skeleton script**. The model loading, preprocessing pipeline,
+and a single-image inference example are already provided.
+
+**You must complete §6** — extend the single-image example into a loop that runs
+inference on all 8 test images and prints the formatted top-5 output for each one.
+
+> **Reference solution:** `solution/inference.py` (do not look until you have tried!)
 
 ---
 
@@ -32,8 +44,11 @@ Lab8/try_2026/
 │   ├── install_offline.ps1     ← students run once to set up lab8_python/
 │   ├── activate.ps1            ← students dot-source before each session
 │   └── install_offline.sh      ← Linux/macOS setup
-├── inference.py           ← Part 1 script
-└── finetune.py            ← Part 2 script
+├── inference.py           ← Part 1 skeleton  (students complete §6)
+├── finetune.py            ← Part 2 skeleton  (students complete §2–6)
+└── solution/
+    ├── inference.py       ← complete reference implementation (instructor)
+    └── finetune.py        ← complete reference implementation (instructor)
 ```
 
 ---
@@ -94,20 +109,26 @@ powershell -ExecutionPolicy Bypass -File setup\install_offline.ps1
 
 ## 3. Running Part 1 – Inference
 
-After activating (`activate.ps1`), from the `try_2026/` directory run:
+**Step 1 – Complete the TODO in `inference.py` §6** before running.  
+Study the single-image example already in the file, then generalise it to loop
+over all 8 test images.
+
+After completing your implementation, activate the environment and run:
 
 ```powershell
 python inference.py
 ```
 
-### What the script does
+### What is provided vs. what you implement
 
-| Step | Action |
-|------|--------|
-| 1 | Loads ResNet50 with ImageNet weights (from cache if offline) |
-| 2 | Randomly selects **10 images** (2–3 per class, seeded for reproducibility) |
-| 3 | Preprocesses each image (resize → crop → normalise) |
-| 4 | Runs a forward pass; prints the **top-5 ImageNet predictions** and confidence |
+| Section | Status | Description |
+|---------|--------|-------------|
+| §1 Device | ✅ provided | Selects CPU or GPU automatically |
+| §2 Model loading | ✅ provided | Loads ResNet50 with ImageNet1K weights |
+| §3 Preprocessing | ✅ provided | Standard ImageNet transform pipeline |
+| §4 Image selection | ✅ provided | Samples 2 images per class (seeded) |
+| §5 Single-image example | ✅ provided | Shows the full inference pattern once |
+| **§6 Full inference loop** | ✏️ **your task** | Extend §5 to all 8 test images |
 
 ### Expected console output
 
