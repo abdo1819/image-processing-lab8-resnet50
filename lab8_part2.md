@@ -99,13 +99,15 @@ You can edit these values to experiment.
 
 ## 5. Running Part 2 – Fine-Tuning
 
-With your virtual environment active, from the `try_2026/` directory run:
+With your virtual environment active, from the `try_2026/` directory complete the TODOs in `finetune.py`, then run:
 
 ```bash
 python finetune.py
 ```
 
 > ⏱️ **Expected runtime:** ~2–5 minutes on CPU | ~30 seconds on GPU.
+
+> A completed instructor/reference version is available in `solution/finetune.py`.
 
 ### What the script does
 

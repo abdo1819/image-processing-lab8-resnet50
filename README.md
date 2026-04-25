@@ -20,9 +20,11 @@ The target classes are:
 ```text
 .
 ├── data/                  # Dataset root
-├── inference.py           # Part 1: pretrained ResNet50 inference
-├── finetune.py            # Part 2: classifier-only fine-tuning
+├── inference.py           # Part 1 student skeleton
+├── finetune.py            # Part 2 student skeleton
+├── concept.md             # Required functions and their roles
 ├── output/                # Generated reports/plots
+├── solution/              # Reference implementations
 ├── trained_models/        # Saved fine-tuned weights
 ├── setup/                 # Setup and offline resource scripts
 ├── lab8_part1.md          # Detailed instructions for Part 1
@@ -72,6 +74,12 @@ python setup/download_resources.py
 
 This prepares offline Python/wheels/model resources inside `offline_packages/`.
 
+## Student workflow
+
+- Students complete the TODOs in the root `inference.py` and `finetune.py` files.
+- `concept.md` explains the required functions in both skeleton files.
+- Instructors can use `solution/inference.py` and `solution/finetune.py` as the completed reference versions.
+
 ## Run Part 1: inference
 
 ```bash
@@ -86,6 +94,12 @@ What it does:
 - saves:
   - `output/confusion_matrix_part1.png`
   - `output/classification_report_part1.txt`
+
+Reference solution:
+
+```bash
+python solution/inference.py
+```
 
 ## Run Part 2: fine-tuning
 
@@ -104,6 +118,12 @@ What it does:
   - `output/confusion_matrix_part2.png`
   - `output/classification_report_part2.txt`
   - `trained_models/resnet50_finetuned.pth`
+
+Reference solution:
+
+```bash
+python solution/finetune.py
+```
 
 ## Notes
 

@@ -32,8 +32,10 @@ Lab8/try_2026/
 │   ├── install_offline.ps1     ← students run once to set up lab8_python/
 │   ├── activate.ps1            ← students dot-source before each session
 │   └── install_offline.sh      ← Linux/macOS setup
-├── inference.py           ← Part 1 script
-└── finetune.py            ← Part 2 script
+├── inference.py           ← Part 1 student skeleton
+├── finetune.py            ← Part 2 student skeleton
+├── concept.md             ← required functions summary
+└── solution/              ← reference implementations
 ```
 
 ---
@@ -94,7 +96,7 @@ powershell -ExecutionPolicy Bypass -File setup\install_offline.ps1
 
 ## 3. Running Part 1 – Inference
 
-After activating (`activate.ps1`), from the `try_2026/` directory run:
+After activating (`activate.ps1`), from the `try_2026/` directory complete the TODOs in `inference.py`, then run:
 
 ```powershell
 python inference.py
@@ -111,6 +113,8 @@ python inference.py
 | 5 | Maps ImageNet class names → {cats, dogs, horses, Humans} using keyword matching |
 | 6 | Computes confusion matrix and classification report |
 | 7 | Saves all outputs to `output/` |
+
+> A completed instructor/reference version is available in `solution/inference.py`.
 
 ### Expected console output
 
