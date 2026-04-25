@@ -1,17 +1,12 @@
 """
 Lab 8 – Part 1: ResNet50 Inference on 4-Class Dataset
 ======================================================
-Loads a pretrained ResNet50 (ImageNet weights), runs inference on a
-sample image, and prints the top-5 ImageNet predictions.
+Loads a pretrained ResNet50 (ImageNet weights), runs inference on 10
+sample images drawn from the 4 lab classes (cats / dogs / horses / Humans),
+and prints the top-5 ImageNet predictions for each image.
 
 Offline mode: set TORCH_HOME to offline_packages/models so PyTorch
 reads the cached weights instead of downloading them.
-
-YOUR TASK
----------
-  TODO – The script currently runs inference on a single hardcoded image.
-         Extend it to loop over ALL images in `test_images` (8 total, 2 per
-         class) and print the formatted top-5 predictions for each one.
 """
 
 import os
@@ -27,6 +22,7 @@ DATA_DIR         = os.path.join(SCRIPT_DIR, "data", "data")
 OUTPUT_DIR       = os.path.join(SCRIPT_DIR, "output")
 OFFLINE_MODELS   = os.path.join(SCRIPT_DIR, "offline_packages", "models")
 
+# Point PyTorch to the offline cache (works online too – just a cache hint)
 os.environ["TORCH_HOME"] = OFFLINE_MODELS
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -46,7 +42,8 @@ model   = models.resnet50(weights=weights)
 model.eval()
 model.to(device)
 
-imagenet_classes = weights.meta["categories"]   # list of 1000 class names
+# Built-in ImageNet class names (no extra file needed)
+imagenet_classes = weights.meta["categories"]   # list of 1000 strings
 
 # ── 3. Preprocessing (ImageNet standard) ─────────────────────────────────────
 preprocess = transforms.Compose([
@@ -57,7 +54,7 @@ preprocess = transforms.Compose([
                          std=[0.229, 0.224, 0.225]),
 ])
 
-# ── 4. Select test images  (provided – do not modify) ─────────────────────────
+# ── 4. Select test images ─────────────────────────────────────────────────────
 random.seed(SEED)
 test_images = []   # list of (abs_path, true_class_name)
 
@@ -70,32 +67,19 @@ print(f"\nTest set ({len(test_images)} images):")
 for p, c in test_images:
     print(f"  [{c:8s}] {os.path.basename(p)}")
 
-# ── 5. Inference on a single image (example – study this pattern) ─────────────
-print("\nSingle-image inference example:")
+# ── 5. Run inference ──────────────────────────────────────────────────────────
+print("\nRunning inference…\n")
+for img_path, true_cls in test_images:
+    img    = Image.open(img_path).convert("RGB")
+    tensor = preprocess(img).unsqueeze(0).to(device)
 
-sample_path, sample_cls = test_images[0]          # first image only
-img    = Image.open(sample_path).convert("RGB")
-tensor = preprocess(img).unsqueeze(0).to(device)   # shape: (1, 3, 224, 224)
+    with torch.no_grad():
+        logits = model(tensor)
+        probs  = torch.softmax(logits, dim=1)[0]
+        top5   = torch.topk(probs, 5)
 
-with torch.no_grad():
-    logits = model(tensor)                         # raw scores for 1000 classes
-    probs  = torch.softmax(logits, dim=1)[0]       # convert to probabilities
-    top5   = torch.topk(probs, 5)                  # top-5 indices & values
-
-top5_names = [imagenet_classes[i.item()] for i in top5.indices]
-conf       = top5.values[0].item() * 100
-print(f"  TRUE={sample_cls:8s}  top1='{top5_names[0]}' ({conf:.1f}%)")
-print(f"           top5: {top5_names}\n")
-
-# ── 6. TODO: Run inference on ALL test images ─────────────────────────────────
-# The example above only processes test_images[0].
-# Extend it: loop over ALL (img_path, true_cls) pairs in test_images and
-# print the same formatted output for each image.
-#
-# Expected output format (for every image):
-#   TRUE=cats      top1='tabby' (78.3%)
-#            top5: ['tabby', 'tiger_cat', 'Egyptian_cat', 'lynx', 'Persian_cat']
-
-print("Running inference on all test images…\n")
-
-# --- your code here ---
+    top5_names = [imagenet_classes[i.item()] for i in top5.indices]
+    conf       = top5.values[0].item() * 100
+    print(f"  TRUE={true_cls:8s}  top1='{top5_names[0]}' ({conf:.1f}%)")
+    print(f"           top5: {top5_names}")
+    print()

@@ -12,6 +12,15 @@ Strategy
       trained_models/resnet50_finetuned.pth
 
 Offline mode: set TORCH_HOME so PyTorch reads cached weights.
+
+YOUR TASK
+---------
+  TODO – Complete sections 2, 3, 4, 5, and 6 marked below:
+    2. Freeze the backbone and replace the FC head.
+    3. Define the loss function and optimizer.
+    4. Fill in the training/validation batch loop body.
+    5. Save the trained model.
+    6. Plot and save the training curves.
 """
 
 import os
@@ -47,7 +56,7 @@ torch.manual_seed(SEED)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Device: {device}")
 
-# ── 1. Dataset ────────────────────────────────────────────────────────────────
+# ── 1. Dataset (provided – do not modify) ────────────────────────────────────
 tf = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
@@ -66,25 +75,30 @@ train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True,  num_wo
 val_loader   = DataLoader(val_ds,   batch_size=BATCH_SIZE, shuffle=False, num_workers=0)
 print(f"Train: {len(train_ds)} images  |  Val: {len(val_ds)} images")
 
-# ── 2. Model – freeze all, replace head ──────────────────────────────────────
+# ── 2. TODO: Model – freeze backbone, replace FC head ─────────────────────────
+# a) Load ResNet50 with IMAGENET1K_V1 weights.
+# b) Freeze ALL parameters (loop: set param.requires_grad = False).
+# c) Replace model.fc with nn.Linear(model.fc.in_features, NUM_CLASSES).
+# d) Move the model to `device`.
+# e) Print how many parameters are trainable vs. total (see lab instructions).
+#
+#   Hint – after freezing, only model.fc has requires_grad=True because
+#   you assigned a brand-new layer in step (c).
+
 print("\nLoading ResNet50 (ImageNet weights)…")
-model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
 
-for param in model.parameters():
-    param.requires_grad = False
+# --- your code here ---
+# model = ...
 
-model.fc = nn.Linear(model.fc.in_features, NUM_CLASSES)
-model.to(device)
+# ── 3. TODO: Loss function and optimizer ──────────────────────────────────────
+# Use CrossEntropyLoss and Adam.
+# The optimizer should update ONLY model.fc parameters.
 
-trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-total     = sum(p.numel() for p in model.parameters())
-print(f"Trainable params: {trainable:,} / {total:,}  ({100*trainable/total:.2f}%)")
+# --- your code here ---
+# criterion = ...
+# optimizer = ...
 
-# ── 3. Loss / optimizer ───────────────────────────────────────────────────────
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.fc.parameters(), lr=LR)
-
-# ── 4. Training loop ──────────────────────────────────────────────────────────
+# ── 4. Training loop (outer structure provided) ───────────────────────────────
 history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
 
 print()
@@ -97,48 +111,30 @@ for epoch in range(NUM_EPOCHS):
 
         total_loss, correct = 0.0, 0
 
-        for inputs, labels in loader:
-            inputs, labels = inputs.to(device), labels.to(device)
-            optimizer.zero_grad()
+        # TODO: Iterate over `loader`; for each batch (inputs, labels):
+        #   • Move inputs and labels to `device`.
+        #   • Zero the gradients.
+        #   • Forward pass (use torch.set_grad_enabled for train vs val).
+        #   • Compute the loss with `criterion`.
+        #   • Get predictions with torch.max.
+        #   • If training: back-propagate and step the optimizer.
+        #   • Accumulate total_loss and correct counts.
+        #
+        # After the loop compute epoch_loss and epoch_acc, append to history,
+        # and print:  "  train  loss=X.XXXX  acc=X.XXXX"
 
-            with torch.set_grad_enabled(phase == "train"):
-                outputs      = model(inputs)
-                loss         = criterion(outputs, labels)
-                _, preds     = torch.max(outputs, 1)
-                if phase == "train":
-                    loss.backward()
-                    optimizer.step()
+        # --- your code here ---
 
-            total_loss += loss.item() * inputs.size(0)
-            correct    += (preds == labels).sum().item()
+# ── 5. TODO: Save the trained model ──────────────────────────────────────────
+# Save model.state_dict() to  trained_models/resnet50_finetuned.pth
+# and print the save path.
 
-        epoch_loss = total_loss / len(loader.dataset)
-        epoch_acc  = correct   / len(loader.dataset)
-        history[f"{phase}_loss"].append(epoch_loss)
-        history[f"{phase}_acc"].append(epoch_acc)
-        print(f"  {phase:5s}  loss={epoch_loss:.4f}  acc={epoch_acc:.4f}")
+# --- your code here ---
 
-# ── 5. Save model ─────────────────────────────────────────────────────────────
-save_path = os.path.join(MODELS_OUT, "resnet50_finetuned.pth")
-torch.save(model.state_dict(), save_path)
-print(f"\nModel saved → {save_path}")
+# ── 6. TODO: Plot training curves ────────────────────────────────────────────
+# Create a 1×2 figure:
+#   Left panel  – train loss vs val loss over epochs.
+#   Right panel – train acc  vs val acc  over epochs.
+# Save to  output/training_curves_part2.png  and print the save path.
 
-# ── 6. Training curves ────────────────────────────────────────────────────────
-fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-epochs_x  = range(1, NUM_EPOCHS + 1)
-
-axes[0].plot(epochs_x, history["train_loss"], "o-", label="Train")
-axes[0].plot(epochs_x, history["val_loss"],   "s-", label="Val")
-axes[0].set_title("Loss"),   axes[0].set_xlabel("Epoch")
-axes[0].set_ylabel("Loss"),  axes[0].legend(), axes[0].grid(True)
-
-axes[1].plot(epochs_x, history["train_acc"], "o-", label="Train")
-axes[1].plot(epochs_x, history["val_acc"],   "s-", label="Val")
-axes[1].set_title("Accuracy"), axes[1].set_xlabel("Epoch")
-axes[1].set_ylabel("Accuracy"), axes[1].legend(), axes[1].grid(True)
-
-plt.suptitle("ResNet50 Fine-Tuning – Training Curves", fontsize=13)
-plt.tight_layout()
-curves_path = os.path.join(OUTPUT_DIR, "training_curves_part2.png")
-plt.savefig(curves_path, dpi=150)
-print(f"Training curves → {curves_path}")
+# --- your code here ---
