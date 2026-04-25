@@ -116,8 +116,6 @@ python finetune.py
 | 3 | Applies data augmentation on the training split |
 | 4 | Trains for 10 epochs; saves the best model by validation accuracy |
 | 5 | Plots loss and accuracy curves |
-| 6 | Evaluates the best model on the validation set |
-| 7 | Saves confusion matrix and classification report |
 
 ### Expected console output (abbreviated)
 
@@ -148,32 +146,96 @@ Model saved → trained_models/resnet50_finetuned.pth
 | File | Description |
 |------|-------------|
 | `output/training_curves_part2.png` | Loss and accuracy curves (train vs val) |
-| `output/confusion_matrix_part2.png` | 4×4 confusion matrix on the validation set |
-| `output/classification_report_part2.txt` | Precision / recall / F1 per class |
 | `trained_models/resnet50_finetuned.pth` | Saved model weights |
+
+The confusion matrix is built manually — see Section 7 below.
 
 ---
 
-## 7. Lab Report Requirements
+## 7. Building the Confusion Matrix Manually
+
+After training completes, run a quick prediction loop in a Python REPL or
+add a temporary script, then tally results by hand.
+
+**Quick prediction snippet** (run after `finetune.py` finishes):
+
+```python
+import torch, torchvision.models as models, torchvision.transforms as transforms
+from torchvision.datasets import ImageFolder
+from torch.utils.data import DataLoader
+import os
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath("finetune.py"))
+DATA_DIR   = os.path.join(SCRIPT_DIR, "data", "data")
+MODEL_PATH = os.path.join(SCRIPT_DIR, "trained_models", "resnet50_finetuned.pth")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+val_tf = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+])
+ds = ImageFolder(DATA_DIR, transform=val_tf)
+loader = DataLoader(ds, batch_size=16, shuffle=False, num_workers=0)
+
+model = models.resnet50(weights=None)
+model.fc = torch.nn.Linear(2048, 4)
+model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+model.eval().to(device)
+
+all_true, all_pred = [], []
+with torch.no_grad():
+    for imgs, labels in loader:
+        _, preds = torch.max(model(imgs.to(device)), 1)
+        all_true.extend(labels.tolist())
+        all_pred.extend(preds.cpu().tolist())
+
+# Print per-image result
+for t, p in zip(all_true, all_pred):
+    print(f"true={ds.classes[t]:8s}  pred={ds.classes[p]}")
+```
+
+**Then build the 4×4 confusion matrix by hand:**
+
+```
+              Predicted
+           cats  dogs  horses  Humans
+True cats  [  ?     ?       ?       ? ]
+True dogs  [  ?     ?       ?       ? ]
+True horses[  ?     ?       ?       ? ]
+True Humans[  ?     ?       ?       ? ]
+```
+
+Compute per-class metrics from the matrix:
+
+| Metric    | Formula |
+|-----------|---------|
+| Precision | TP / (TP + FP) |
+| Recall    | TP / (TP + FN) |
+| F1-score  | 2 × P × R / (P + R) |
+
+---
+
+## 8. Lab Report Requirements
 
 Submit a **combined** report for Parts 1 and 2, or a standalone Part 2
 report – follow your instructor's instructions.
 
-### 7.1 Introduction (½ page)
+### 8.1 Introduction (½ page)
 - Explain **transfer learning** and **feature extraction** vs full fine-tuning.
 - Why do we freeze the backbone?
 
-### 7.2 Methodology
+### 8.2 Methodology
 - Describe the training setup (optimizer, loss function, scheduler, augmentation).
 - Explain the train/val split strategy.
 
-### 7.3 Results
+### 8.3 Results
 
 **Training curves** – include `training_curves_part2.png` and describe:
 - Does the training loss decrease consistently?
 - Is there a gap between training and validation accuracy (overfitting)?
 
-**Confusion matrix** – include `confusion_matrix_part2.png`.
+**Confusion matrix** – include the manually built confusion matrix (see Section 7).
 
 **Classification report** – copy the metrics into the table:
 
@@ -184,7 +246,7 @@ report – follow your instructor's instructions.
 | horses |           |        |          |         |
 | Humans |           |        |          |         |
 
-### 7.4 Comparison with Part 1
+### 8.4 Comparison with Part 1
 
 Fill in this comparison table:
 
@@ -196,7 +258,7 @@ Fill in this comparison table:
 | horses F1 | | |
 | Humans F1 | | |
 
-### 7.5 Discussion (1 page)
+### 8.5 Discussion (1 page)
 
 Answer these questions:
 1. How much did fine-tuning improve accuracy compared to Part 1?
@@ -209,7 +271,7 @@ Answer these questions:
 5. The learning rate is reduced at epoch 5 (`StepLR, gamma=0.1`).  Why
    does reducing LR during training help?
 
-### 7.6 Conclusion (¼ page)
+### 8.6 Conclusion (¼ page)
 
 - Does classifier-only fine-tuning achieve satisfactory accuracy on this
   4-class dataset?
@@ -217,7 +279,7 @@ Answer these questions:
 
 ---
 
-## 8. Optional Experiments (Bonus)
+## 9. Optional Experiments (Bonus)
 
 Try the following modifications and report the change in accuracy:
 
@@ -230,7 +292,7 @@ Try the following modifications and report the change in accuracy:
 
 ---
 
-## 9. Troubleshooting
+## 10. Troubleshooting
 
 | Problem | Solution |
 |---------|----------|

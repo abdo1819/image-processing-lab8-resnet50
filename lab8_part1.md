@@ -4,8 +4,8 @@
 
 - Load a pretrained **ResNet50** (trained on ImageNet-1K).
 - Run inference on **10 sample images** from a 4-class dataset (cats / dogs / horses / Humans).
-- Map the 1000-class ImageNet predictions to our 4 classes.
-- Generate a **confusion matrix** and a **per-class classification report**.
+- Observe the raw **ImageNet top-5 predictions** for each image.
+- Manually record results and build a confusion matrix.
 
 ---
 
@@ -107,10 +107,7 @@ python inference.py
 | 1 | Loads ResNet50 with ImageNet weights (from cache if offline) |
 | 2 | Randomly selects **10 images** (2–3 per class, seeded for reproducibility) |
 | 3 | Preprocesses each image (resize → crop → normalise) |
-| 4 | Runs a forward pass; takes the **top-5 predictions** |
-| 5 | Maps ImageNet class names → {cats, dogs, horses, Humans} using keyword matching |
-| 6 | Computes confusion matrix and classification report |
-| 7 | Saves all outputs to `output/` |
+| 4 | Runs a forward pass; prints the **top-5 ImageNet predictions** and confidence |
 
 ### Expected console output
 
@@ -121,45 +118,75 @@ Loading ResNet50 (ImageNet weights)…
 Test set (10 images):
   [cats    ] cat.42.jpg
   [cats    ] cat.7.jpg
-  [cats    ] cat.15.jpg
   ...
 
 Running inference…
 
-  TRUE=cats      PRED=cats      top1='tabby' (78.3%)
-  TRUE=dogs      PRED=dogs      top1='golden_retriever' (65.1%)
-  ...
+  TRUE=cats      top1='tabby' (78.3%)
+           top5: ['tabby', 'tiger_cat', 'Egyptian_cat', 'lynx', 'Persian_cat']
 
-Confusion matrix  → output/confusion_matrix_part1.png
-Classification report → output/classification_report_part1.txt
+  TRUE=dogs      top1='golden_retriever' (65.1%)
+           top5: ['golden_retriever', 'Labrador_retriever', 'cocker_spaniel', ...]
+  ...
 ```
 
 ---
 
 ## 4. Output Files
 
-After running, check the `output/` directory:
+The script produces no output files — all results are printed to the console.
+Record the printed predictions manually (see Section 5 below).
 
-| File | Description |
-|------|-------------|
-| `confusion_matrix_part1.png` | 4×4 heatmap of true vs predicted classes |
-| `classification_report_part1.txt` | Precision / recall / F1 per class + per-image detail |
+---
 
-### Sample confusion matrix
+## 5. Building the Confusion Matrix Manually
+
+After running `inference.py`, the console shows each image's true class and the
+top-5 ImageNet predictions.
+
+**Step 1 – Decide the predicted class.**  
+Look at the top-5 names and pick the entry that best matches one of:
+`cats`, `dogs`, `horses`, `Humans`.
+
+> **Mapping hint (not in the script):**  
+> The original script used keyword lists to do this automatically:  
+> - **cats** → ImageNet names containing: `cat`, `tabby`, `kitten`, `persian`, `siamese`, `lynx`, `leopard`, …  
+> - **dogs** → `dog`, `hound`, `terrier`, `spaniel`, `retriever`, `poodle`, `husky`, …  
+> - **horses** → `horse`, `mare`, `pony`, `colt`, `foal`, `sorrel`, `appaloosa`, …  
+> - **Humans** → `person`, `man`, `woman`, `player`, `gymnast`, `cowboy`, `soldier`, …  
+> Use this as a guide when reading the raw output.
+
+**Step 2 – Fill in the table.**
+
+| Image | True class | Top-1 ImageNet | Predicted class |
+|-------|-----------|----------------|-----------------|
+| …     | cats      | tabby          | cats            |
+| …     | Humans    | suit           | ?               |
+
+**Step 3 – Build the 4×4 confusion matrix.**
+
+Draw a grid with rows = True class, columns = Predicted class, and tally counts:
 
 ```
-             Predicted
+              Predicted
            cats  dogs  horses  Humans
-True cats  [  2     0       0       1 ]
-True dogs  [  0     3       0       0 ]
-True horses[  0     0       2       0 ]
-True Humans[  0     0       0       2 ]
+True cats  [  ?     ?       ?       ? ]
+True dogs  [  ?     ?       ?       ? ]
+True horses[  ?     ?       ?       ? ]
+True Humans[  ?     ?       ?       ? ]
 ```
 
-> ⚠️ **Note:** ResNet50 is not specifically trained on our 4 classes.
-> "Humans" images are especially challenging because ImageNet contains
-> few explicitly human-labelled classes.  Low accuracy for Humans is
-> expected and is a motivation for Part 2 (fine-tuning).
+**Step 4 – Compute per-class metrics.**
+
+For each class `C`:
+
+| Metric    | Formula |
+|-----------|---------|
+| Precision | TP / (TP + FP) |
+| Recall    | TP / (TP + FN) |
+| F1-score  | 2 × Precision × Recall / (Precision + Recall) |
+
+where TP = diagonal cell for C, FP = column sum − TP, FN = row sum − TP.
 
 ---
 
@@ -172,13 +199,12 @@ Submit a PDF report containing the following sections:
 - Explain what "inference on a pretrained model" means.
 
 ### 5.2 Methodology
-- List the 10 images you tested (class and filename).
-- Describe the ImageNet→4-class mapping strategy used in `inference.py`.
+- List the 10 images you tested (class and filename, copied from the console output).
+- Describe the ImageNet→4-class mapping strategy you used (keyword-based or your own).
 
 ### 5.3 Results
-- Include the **confusion matrix image** (`confusion_matrix_part1.png`).
-- Include the **classification report** (copy from the `.txt` file).
-- Fill in the table below:
+- Include the **manually drawn confusion matrix** (see Section 5 above).
+- Fill in the table below (computed by hand from the confusion matrix):
 
 | Class  | Precision | Recall | F1-score | # Images tested |
 |--------|-----------|--------|----------|-----------------|
